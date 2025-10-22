@@ -47,3 +47,7 @@ then you are about to be sent to the menu again, right before that i want you to
 back to the menu only after they press enter so it makes it easy for them to see the result instead of the result 
 being pushed up by the menu. of course again, remember to keep it beginner friendly with no imports, comment the code 
 when needed to explain it and take care of possible errors/exceptions
+
+--4
+i now want you to make the menues and results and everything just look good when printed in the terminal, 
+i don't want just plain text. but also remember, beginner friendly so no imports or complicated stuff
