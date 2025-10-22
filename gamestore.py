@@ -1,3 +1,35 @@
+# Helper functions for pretty printing
+def print_header(text):
+    """Print a header with a border."""
+    width = 60
+    print("\n" + "╔" + "═" * (width-2) + "╗")
+    print("║" + text.center(width-2) + "║")
+    print("╚" + "═" * (width-2) + "╝")
+
+def print_submenu(text):
+    """Print a submenu header."""
+    print("\n" + "┌" + "─" * 58 + "┐")
+    print("│" + text.center(58) + "│")
+    print("└" + "─" * 58 + "┘")
+
+def print_info(label, value, width=20):
+    """Print an info line with label and value."""
+    print(f"│ {label:<{width}}: {value}")
+
+def print_item(name, details):
+    """Print an item's details in a box."""
+    print("├" + "─" * 58 + "┤")
+    print(f"│ {name}")
+    print_info("  Price", f"${details['price']:.2f}")
+    print_info("  Stock", details['stock'])
+    if 'provider' in details:
+        print_info("  Provider", details['provider'])
+    print("├" + "─" * 58 + "┤")
+
+def print_menu_item(number, text):
+    """Print a menu item with number."""
+    print(f"│  [{number}] {text:<54}│")
+
 # Dictionary to store our inventory items
 # Each item maps to a dict with: price (sale price), stock (quantity on hand),
 # cost (how much we paid per unit), provider (who supplied it)
@@ -86,24 +118,25 @@ def add_item():
 def modify_item():
     """Modify an existing item in the inventory"""
     try:
-        print("\n=== Modify Item ===")
+        print_header("Modify Item")
         name = input("Enter the name of the item to modify: ").strip()
 
         if name not in inventory:
-            print("Item not found in inventory!")
+            print_submenu("❌ Item not found in inventory!")
             return
 
         # Show current details and provider
-        print("\nCurrent item details:")
-        print(f"Name: {name}")
-        print(f"Price: ${inventory[name]['price']:.2f}")
-        print(f"Stock: {inventory[name]['stock']}")
-        print(f"Provider: {inventory[name].get('provider', 'Unknown')}")
+        print_submenu("Current Item Details")
+        print("┌" + "─" * 58 + "┐")
+        print_item(name, inventory[name])
+        print("└" + "─" * 58 + "┘")
 
         # The user is allowed only to change price and stock (not the name).
-        print("\nWhat would you like to modify?")
-        print("1. Price")
-        print("2. Stock")
+        print_submenu("Select What to Modify")
+        print("┌" + "─" * 58 + "┐")
+        print_menu_item("1", "Price")
+        print_menu_item("2", "Stock")
+        print("└" + "─" * 58 + "┘")
 
         choice = input("Enter your choice (1-2): ")
 
@@ -129,22 +162,22 @@ def modify_item():
 def remove_item():
     """Remove an item from the inventory"""
     try:
-        print("\n=== Remove Item ===")
+        print_header("Remove Item")
         name = input("Enter the name of the item to remove: ").strip()
         
         if name not in inventory:
-            print("Item not found in inventory!")
+            print_submenu("❌ Item not found in inventory!")
             return
             
-        print(f"\nCurrent item details:")
-        print(f"Name: {name}")
-        print(f"Price: ${inventory[name]['price']:.2f}")
-        print(f"Stock: {inventory[name]['stock']}")
+        print_submenu("Current Item Details")
+        print("┌" + "─" * 58 + "┐")
+        print_item(name, inventory[name])
+        print("└" + "─" * 58 + "┘")
         
         confirm = input("\nAre you sure you want to remove this item? (yes/no): ").lower()
         if confirm == 'yes':
             del inventory[name]
-            print("Item removed successfully!")
+            print_submenu("✅ Item removed successfully!")
         else:
             print("Operation cancelled.")
             pause()
@@ -165,38 +198,42 @@ def calculate_inventory_value():
             # cost may not exist for very old entries, default to 0
             item_cost = details.get('cost', 0) * details['stock']
             total_cost += item_cost
-        print(f"\nTotal inventory sale value: ${total_value:.2f}")
-        print(f"Total inventory cost (what you paid): ${total_cost:.2f}")
+            
+        print_header("Inventory Value Summary")
+        print("┌" + "─" * 58 + "┐")
+        print("│ " + f"{'Total Sale Value:':<30} ${total_value:<25.2f}" + " │")
+        print("│ " + f"{'Total Cost Invested:':<30} ${total_cost:<25.2f}" + " │")
+        print("│ " + f"{'Potential Profit:':<30} ${(total_value - total_cost):<25.2f}" + " │")
+        print("└" + "─" * 58 + "┘")
         pause()
 
     except Exception as e:
-        print(f"An error occurred: {str(e)}")
+        print_info(f"❌ An error occurred: {e}")
         pause()
 
 def find_most_expensive():
     """Find and display the most expensive item"""
     try:
         if not inventory:
-            print("\nInventory is empty!")
+            print_submenu("❌ Inventory is empty!")
             return
             
         most_expensive = max(inventory.items(), key=lambda x: x[1]['price'])
-        print(f"\nMost expensive item:")
-        print(f"Name: {most_expensive[0]}")
-        print(f"Price: ${most_expensive[1]['price']:.2f}")
-        print(f"Stock: {most_expensive[1]['stock']}")
-        print(f"Provider: {most_expensive[1].get('provider','Unknown')}")
+        print_header("Most Expensive Item")
+        print("┌" + "─" * 58 + "┐")
+        print_item(most_expensive[0], most_expensive[1])
+        print("└" + "─" * 58 + "┘")
         pause()
 
     except Exception as e:
-        print(f"An error occurred: {str(e)}")
+        print_info(f"❌ An error occurred: {e}")
         pause()
 
 def calculate_average_price():
     """Calculate and display the average price of items"""
     try:
         if not inventory:
-            print("\nInventory is empty!")
+            print_submenu("❌ Inventory is empty!")
             return
             
         total_price = 0
@@ -207,21 +244,25 @@ def calculate_average_price():
             total_items += 1
 
         average = total_price / total_items
-        print(f"\nAverage price per product type: ${average:.2f}")
 
-        # Also provide weighted average by stock
+        # Also calculate weighted average by stock
         total_price_stock = 0
         total_stock = 0
         for item in inventory.values():
             total_price_stock += item['price'] * item['stock']
             total_stock += item['stock']
-        if total_stock > 0:
-            weighted = total_price_stock / total_stock
-            print(f"Weighted average price (by stock): ${weighted:.2f}")
+            
+        weighted = total_price_stock / total_stock if total_stock > 0 else 0
+        
+        print_header("Price Analysis")
+        print("┌" + "─" * 58 + "┐")
+        print("│ " + f"{'Average Price per Product:':<30} ${average:<25.2f}" + " │")
+        print("│ " + f"{'Weighted Average by Stock:':<30} ${weighted:<25.2f}" + " │")
+        print("└" + "─" * 58 + "┘")
         pause()
         
     except Exception as e:
-        print(f"An error occurred: {str(e)}")
+        print_info(f"❌ An error occurred: {e}")
 
 # ---------------- Providers and buying logic ----------------
 # Providers are sources where we can buy stock to add to our store.
@@ -293,69 +334,91 @@ providers = {
 def show_providers():
     """Display providers and their items."""
     try:
-        print("\n=== Providers ===")
+        print_header("Our Providers")
         for pname, items in providers.items():
-            print(f"\nProvider: {pname}")
+            print_submenu(f"📦 {pname}")
+            print("┌" + "─" * 58 + "┐")
             for iname, details in items.items():
-                print(f" - {iname}: cost ${details['cost']:.2f}, available {details['available']}")
+                print("│ " + f"{iname:<40} ${details['cost']:<6.2f} [{details['available']:>3}]" + " │")
+            print("└" + "─" * 58 + "┘")
     except Exception as e:
-        print(f"An error occurred: {str(e)}")
+        print_info(f"❌ An error occurred: {e}")
     pause()
 
 def buy_from_provider():
     """Buy stock from a provider. New products can only be added through this flow."""
     global store_money
     try:
-        print("\n=== Buy from Provider ===")
+        print_header("Buy from Provider")
         # List providers
+        print_submenu("Available Providers")
+        print("┌" + "─" * 58 + "┐")
         plist = list(providers.keys())
         for i, pname in enumerate(plist, 1):
-            print(f"{i}. {pname}")
+            print_menu_item(str(i), pname)
+        print("└" + "─" * 58 + "┘")
+        
         choice = input("Select a provider by number (or 'c' to cancel): ").strip()
         if choice.lower() == 'c':
-            print("Cancelled.")
+            print_info("Operation cancelled.")
             pause()
             return
         if not choice.isdigit() or int(choice) < 1 or int(choice) > len(plist):
-            print("Invalid provider choice!")
+            print_info("❌ Invalid provider choice!")
             return
+            
         provider_name = plist[int(choice)-1]
         # Show items from provider
         items = providers[provider_name]
-        print(f"\nItems from {provider_name}:")
+        print_submenu(f"Items from {provider_name}")
+        print("┌" + "─" * 58 + "┐")
         item_list = list(items.keys())
         for i, iname in enumerate(item_list, 1):
             d = items[iname]
-            print(f"{i}. {iname} - cost ${d['cost']:.2f}, available {d['available']}")
+            print_menu_item(str(i), f"{iname} - ${d['cost']:.2f} ({d['available']} available)")
+        print("└" + "─" * 58 + "┘")
 
         ichoice = input("Select item by number (or 'c' to cancel): ").strip()
         if ichoice.lower() == 'c':
-            print("Cancelled.")
+            print_info("Operation cancelled.")
             pause()
             return
         if not ichoice.isdigit() or int(ichoice) < 1 or int(ichoice) > len(item_list):
-            print("Invalid item choice!")
+            print_info("❌ Invalid item choice!")
             return
+            
         item_name = item_list[int(ichoice)-1]
         available = items[item_name]['available']
         cost = items[item_name]['cost']
 
-        print(f"\nSelected: {item_name} from {provider_name} - cost ${cost:.2f}, available {available}")
+        print_submenu("Selected Item Details")
+        print("┌" + "─" * 58 + "┐")
+        print("│ " + f"{'Item:':<12} {item_name:<44}" + " │")
+        print("│ " + f"{'Provider:':<12} {provider_name:<44}" + " │")
+        print("│ " + f"{'Cost:':<12} ${cost:<43.2f}" + " │")
+        print("│ " + f"{'Available:':<12} {available:<44}" + " │")
+        print("└" + "─" * 58 + "┘")
+        
         qty = get_valid_number("Enter quantity to buy: ", True)
         if qty > available:
-            print("Provider doesn't have that many available!")
+            print_info("❌ Provider doesn't have that many available!")
             pause()
             return
+            
         total_cost = cost * qty
-        print(f"Total cost will be: ${total_cost:.2f}")
-        print(f"Store money available: ${store_money:.2f}")
+        print_submenu("Purchase Summary")
+        print("┌" + "─" * 58 + "┐")
+        print("│ " + f"{'Total Cost:':<12} ${total_cost:<43.2f}" + " │")
+        print("│ " + f"{'Available:':<12} ${store_money:<43.2f}" + " │")
+        print("└" + "─" * 58 + "┘")
+        
         confirm = input("Proceed with purchase? (yes/no): ").lower()
         if confirm != 'yes':
-            print("Purchase cancelled.")
+            print_info("Operation cancelled.")
             pause()
             return
         if total_cost > store_money:
-            print("Not enough money to complete purchase!")
+            print_info("❌ Not enough money to complete purchase!")
             pause()
             return
 
@@ -375,18 +438,21 @@ def buy_from_provider():
             inventory[item_name]['stock'] = old_stock + qty
             inventory[item_name]['cost'] = new_cost
             # Keep sale price as-is; user can modify price later
-            print(f"Bought {qty} of existing item '{item_name}'. Stock now {inventory[item_name]['stock']}")
+            print_info(f"✅ Bought {qty} units of '{item_name}'. New stock: {inventory[item_name]['stock']}")
             pause()
         else:
             # New item — add to inventory with provider and cost
             # Default sale price is cost * 2 (simple markup), user can modify later
             sale_price = round(cost * 2, 2)
             inventory[item_name] = {'price': sale_price, 'stock': qty, 'cost': cost, 'provider': provider_name}
-            print(f"Bought new item '{item_name}' and added to inventory with price ${sale_price:.2f}")
+            print_submenu("✅ New Item Added to Inventory")
+            print("┌" + "─" * 58 + "┐")
+            print_item(item_name, inventory[item_name])
+            print("└" + "─" * 58 + "┘")
             pause()
 
     except Exception as e:
-        print(f"An error occurred: {str(e)}")
+        print_info(f"❌ An error occurred: {e}")
 
 # ---------------- Sales simulation ----------------
 def simulate_day_sales():
@@ -398,14 +464,14 @@ def simulate_day_sales():
     global store_money
     try:
         if not inventory:
-            print("No inventory to simulate sales.")
+            print_info("❌ No inventory to simulate sales.")
             return
 
-        print("\n=== Simulate Day of Sales ===")
+        print_header("Simulate Day of Sales")
         # Ask for a simple aggressiveness factor to control how busy the day is
         factor = get_valid_number("Enter day demand factor (0.0 - quiet, 1.0 - normal, 2.0 - busy): ")
         if factor < 0:
-            print("Factor cannot be negative. Using 1.0")
+            print_info("Factor cannot be negative. Using 1.0")
             factor = 1.0
 
         total_revenue = 0
@@ -413,6 +479,7 @@ def simulate_day_sales():
         total_items_sold = 0
         sales_details = []
 
+        print_submenu("Simulating Sales...")
         # Iterate through inventory and simulate sales for each item
         for name, details in inventory.items():
             # Simple rule: expected sales = min(stock, round(factor * (stock * 0.2)))
@@ -441,56 +508,64 @@ def simulate_day_sales():
         store_money += profit
 
         # Show summary
-        print(f"\nDay sales summary:")
-        print(f"Total items sold: {total_items_sold}")
-        print(f"Total revenue: ${total_revenue:.2f}")
-        print(f"Total cost of goods sold: ${total_cogs:.2f}")
-        print(f"Profit (revenue - COGS): ${profit:.2f}")
-        print(f"Store money after sales: ${store_money:.2f}")
+        print_submenu("Day Sales Summary")
+        print("┌" + "─" * 58 + "┐")
+        print("│ " + f"{'Total Items Sold:':<30} {total_items_sold:<26}" + " │")
+        print("│ " + f"{'Total Revenue:':<30} ${total_revenue:<25.2f}" + " │")
+        print("│ " + f"{'Cost of Goods Sold:':<30} ${total_cogs:<25.2f}" + " │")
+        print("│ " + f"{'Profit:':<30} ${profit:<25.2f}" + " │")
+        print("│ " + f"{'Store Money After Sales:':<30} ${store_money:<25.2f}" + " │")
+        print("└" + "─" * 58 + "┘")
 
-        print("\nDetailed sales per item:")
-        for name, sold, revenue, cogs in sales_details:
-            print(f" - {name}: sold {sold}, revenue ${revenue:.2f}, cogs ${cogs:.2f}")
+        if sales_details:
+            print_submenu("Detailed Sales by Item")
+            print("┌" + "─" * 58 + "┐")
+            for name, sold, revenue, cogs in sales_details:
+                if sold > 0:
+                    item_profit = revenue - cogs
+                    print("│ " + f"{name[:25]:<25} {sold:>3} sold, ${revenue:>7.2f} rev" + " │")
+            print("└" + "─" * 58 + "┘")
         pause()
 
     except Exception as e:
-        print(f"An error occurred during sales simulation: {str(e)}")
+        print_info(f"❌ An error occurred during sales simulation: {e}")
 
 def display_inventory():
     """Display all items in the inventory"""
     try:
         if not inventory:
-            print("\nInventory is empty!")
+            print_submenu("Inventory is Empty!")
             return
             
-        print("\n=== Current Inventory ===")
+        print_header("Current Inventory")
+        print("┌" + "─" * 58 + "┐")
         for item, details in inventory.items():
-            print(f"\nName: {item}")
-            print(f"Price: ${details['price']:.2f}")
-            print(f"Stock: {details['stock']}")
-            print("-" * 20)
+            print_item(item, details)
+        print("└" + "─" * 58 + "┘")
         pause()
             
     except Exception as e:
-        print(f"An error occurred: {str(e)}")
+        print(f"❌ An error occurred: {str(e)}")
 
 def main():
     """Main program loop"""
     while True:
         try:
-            print("\n=== Game Store Inventory Management ===")
-            print("1. Add new item (disabled - buy from providers)")
-            print("2. Modify item (price/stock)")
-            print("3. Remove item")
-            print("4. Display inventory")
-            print("5. Calculate total inventory value")
-            print("6. Find most expensive item")
-            print("7. Calculate average price")
-            print("8. Show providers and their catalog")
-            print("9. Buy from provider")
-            print("10. Simulate a day of sales")
-            print("11. Show store money")
-            print("0. Exit")
+            print_header("Game Store Inventory Management")
+            print("┌" + "─" * 58 + "┐")
+            print_menu_item("1", "Add new item (disabled - buy from providers)")
+            print_menu_item("2", "Modify item (price/stock)")
+            print_menu_item("3", "Remove item")
+            print_menu_item("4", "Display inventory")
+            print_menu_item("5", "Calculate total inventory value")
+            print_menu_item("6", "Find most expensive item")
+            print_menu_item("7", "Calculate average price")
+            print_menu_item("8", "Show providers and their catalog")
+            print_menu_item("9", "Buy from provider")
+            print_menu_item("10", "Simulate a day of sales")
+            print_menu_item("11", f"Show store money (Current: ${store_money:.2f})")
+            print_menu_item("0", "Exit")
+            print("└" + "─" * 58 + "┘")
 
             choice = input("\nEnter your choice (number): ")
             
@@ -517,13 +592,16 @@ def main():
             elif choice == '10':
                 simulate_day_sales()
             elif choice == '11':
-                print(f"\nStore money: ${store_money:.2f}")
+                print_header("Store Money")
+                print("┌" + "─" * 58 + "┐")
+                print("│ " + f"{'Current Balance:':<30} ${store_money:<25.2f}" + " │")
+                print("└" + "─" * 58 + "┘")
                 pause()
             elif choice == '0':
-                print("Thank you for using the Game Store Inventory Management System!")
+                print_submenu("✨ Thank you for using the Game Store Inventory Management System!")
                 break
             else:
-                print("Invalid choice! Please try again.")
+                print_submenu("❌ Invalid choice! Please try again.")
                 
         except Exception as e:
             print(f"An unexpected error occurred: {str(e)}")
